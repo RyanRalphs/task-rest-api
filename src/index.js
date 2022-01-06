@@ -13,9 +13,9 @@ app.post('/users', async ({ body }, res) => {
     const user = new User(body)
     try {
         await user.save()
-        return res.status(201).send('New User saved with name ' + user.name)
+         res.status(201).send('New User saved with name ' + user.name)
     } catch (error) {
-        return res.status(400).send(error)
+         res.status(400).send(error)
     }
 })
 
@@ -25,9 +25,9 @@ app.post('/tasks', async ({ body }, res) => {
 
     try {
         await task.save()
-        return res.status(201).send('New Task saved with name ' + task.name)
+         res.status(201).send('New Task saved with name ' + task.name)
     } catch (error) {
-        return res.status(400).send(error.message)
+         res.status(400).send(error.message)
     }
 })
 
@@ -35,9 +35,9 @@ app.get('/users', async (req, res) => {
 
     try {
         const users = await User.find({})
-        return res.status(200).send(users)
+         res.status(200).send(users)
     } catch (error) {
-        return res.status(500).send()
+         res.status(500).send()
     }
 
 })
@@ -45,9 +45,9 @@ app.get('/users', async (req, res) => {
 app.get('/tasks', async (req, res) => {
     try {
         const tasks = await Task.find({})
-        return res.status(200).send(tasks)
+         res.status(200).send(tasks)
     } catch (error) {
-        return res.status(500).send()
+         res.status(500).send()
     }
 
 })
@@ -61,9 +61,9 @@ app.get('/tasks/:id', async ({ params }, res) => {
         if (!task) {
             return res.status(404).send('Could not find a task with ID: ' + _id)
         }
-        return res.status(200).send(task)
+         res.status(200).send(task)
     } catch (error) {
-        return res.status(500).send(error.message)
+         res.status(500).send(error.message)
     }
 })
 
@@ -76,9 +76,9 @@ app.get('/users/:id', async ({ params }, res) => {
         if (!user) {
             return res.status(404).send('Could not find a user with ID: ' + _id)
         }
-        return res.status(200).send(user)
+         res.status(200).send(user)
     } catch (error) {
-        return res.status(500).send(error.message)
+         res.status(500).send(error.message)
     }
 })
 
