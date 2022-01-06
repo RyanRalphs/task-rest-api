@@ -9,69 +9,77 @@ const port = process.env.PORT || 3000
 
 app.use(express.json())
 
-app.post('/users', ({ body }, res) => {
-    const newUser = new User(body)
-
-    newUser.save().then((user) => {
+app.post('/users', async ({ body }, res) => {
+    const user = new User(body)
+    try {
+        await user.save()
         return res.status(201).send('New User saved with name ' + user.name)
-    }).catch((error) => {
-        return res.status(400).send(error.message)
-    })
+    } catch (error) {
+        return res.status(400).send(error)
+    }
 })
 
 
-app.post('/tasks', ({ body }, res) => {
-    const newTask = new Task(body)
+app.post('/tasks', async ({ body }, res) => {
+    const task = new Task(body)
 
-    newTask.save().then((task) => {
+    try {
+        await task.save()
         return res.status(201).send('New Task saved with name ' + task.name)
-    }).catch((error) => {
+    } catch (error) {
         return res.status(400).send(error.message)
-    })
+    }
 })
 
-app.get('/users', (req, res) => {
-    User.find({}).then((allUsers) => {
-        return res.status(200).send(allUsers)
-    }).catch((error) => {
+app.get('/users', async (req, res) => {
+
+    try {
+        const users = await User.find({})
+        return res.status(200).send(users)
+    } catch (error) {
         return res.status(500).send()
-    })
+    }
+
 })
 
-app.get('/tasks', (req, res) => {
-    Task.find({}).then((allTasks) => {
-        return res.status(200).send(allTasks)
-    }).catch((error) => {
+app.get('/tasks', async (req, res) => {
+    try {
+        const tasks = await Task.find({})
+        return res.status(200).send(tasks)
+    } catch (error) {
         return res.status(500).send()
-    })
+    }
+
 })
 
 
-app.get('/tasks/:id', ({ params }, res) => {
+app.get('/tasks/:id', async ({ params }, res) => {
     const _id = params.id
 
-    Task.findById(_id).then((task) => {
+    try {
+        const task = await Task.findById(_id)
         if (!task) {
             return res.status(404).send('Could not find a task with ID: ' + _id)
         }
         return res.status(200).send(task)
-    }).catch((error) => {
+    } catch (error) {
         return res.status(500).send(error.message)
-    })
+    }
 })
 
 
-app.get('/users/:id', ({ params }, res) => {
+app.get('/users/:id', async ({ params }, res) => {
     const _id = params.id
 
-    User.findById(_id).then((user) => {
+    try {
+        const user = await User.findById(_id)
         if (!user) {
             return res.status(404).send('Could not find a user with ID: ' + _id)
         }
         return res.status(200).send(user)
-    }).catch((error) => {
+    } catch (error) {
         return res.status(500).send(error.message)
-    })
+    }
 })
 
 app.listen(port, () => {
