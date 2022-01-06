@@ -9,8 +9,8 @@ const port = process.env.PORT || 3000
 
 app.use(express.json())
 
-app.post('/users', ({body}, res) => { 
-    const newUser = new User(body)  
+app.post('/users', ({ body }, res) => {
+    const newUser = new User(body)
 
     newUser.save().then((user) => {
         return res.status(201).send('New User saved with name ' + user.name)
@@ -20,7 +20,7 @@ app.post('/users', ({body}, res) => {
 })
 
 
-app.post('/tasks', ({body}, res) => {
+app.post('/tasks', ({ body }, res) => {
     const newTask = new Task(body)
 
     newTask.save().then((task) => {
@@ -47,30 +47,33 @@ app.get('/tasks', (req, res) => {
 })
 
 
-app.get('/tasks/:id', ({params}, res) => {
-    const id = params.id
+app.get('/tasks/:id', ({ params }, res) => {
+    const _id = params.id
 
-    Task.findOne({
-        _id: new ObjectId(id)
-    }).then((result) => {
-        return res.status(200).send(result)
+    Task.findById(_id).then((task) => {
+        if (!task) {
+            return res.status(404).send('Could not find a task with ID: ' + _id)
+        }
+        return res.status(200).send(task)
     }).catch((error) => {
-        return res.status(500).send('Could not find a task with name of ' + taskName)
+        return res.status(500).send(error.message)
     })
 })
 
-app.get('/users/:id', ({params}, res) => {
-    const id = params.id
-    
-    User.findOne({
-        _id: new ObjectId(id)
-    }).then((result) => {
-        return res.status(200).send(result)
+
+app.get('/users/:id', ({ params }, res) => {
+    const _id = params.id
+
+    User.findById(_id).then((user) => {
+        if (!user) {
+            return res.status(404).send('Could not find a user with ID: ' + _id)
+        }
+        return res.status(200).send(user)
     }).catch((error) => {
-        return res.status(400).send('Could not find a task with name of ' + usersName)
+        return res.status(500).send(error.message)
     })
 })
 
 app.listen(port, () => {
-     console.log('Server is running on ' + port)
+    console.log('Server is running on ' + port)
 })
