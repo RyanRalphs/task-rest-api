@@ -46,6 +46,15 @@ app.get('/users/:id', async ({ params }, res) => {
 
 app.patch('/users/:id', async ({ params, body }, res) => {
     const _id = params.id
+    const allowedUpdates = ['name', 'email', 'age', 'password']
+    const requestedUpdate = Object.keys(body)
+    const isValidUpdate = requestedUpdate.every((update) =>{
+        return allowedUpdates.includes(update)
+    })
+
+    if(!isValidUpdate) {
+        return res.status(404).send('You are attempting to update a field that does not exist, or is not allowed to be updated. You may only update ' + allowedUpdates)
+    }
 
     try {
         const user = await User.findByIdAndUpdate(_id, body, { new: true, runValidators: true })
@@ -97,7 +106,15 @@ app.get('/tasks/:id', async ({ params }, res) => {
 
 app.patch('/tasks/:id', async ({ params, body }, res) => {
     const _id = params.id
+    const allowedFields = ['name', 'description', 'completed']
+    const requestedUpdate = Object.keys(body)
+    const isValidUpdate = requestedUpdate.every((update) => {
+        return allowedFields.includes(update)
+    })
 
+    if(!isValidUpdate) {
+        return res.status(404).send('Attempt to update on field that does not exist or is not updatable. You may only update ' + allowedFields)
+    }
     try {
         const task = await Task.findByIdAndUpdate(_id, body, { new: true, runValidators: true })
         if (!task) {
