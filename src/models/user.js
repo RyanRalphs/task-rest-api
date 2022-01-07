@@ -76,7 +76,6 @@ userSchema.methods.generateJsonWebToken = async function () {
 }
 
 
-// Hashing a plain text password pre-save
 userSchema.pre('save', async function (next) {
     const user = this
 
