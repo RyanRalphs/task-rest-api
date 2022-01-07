@@ -49,10 +49,16 @@ router.patch('/users/:id', async ({ params, body }, res) => {
         return res.status(400).send({ error: 'You are attempting to update a field that does not exist, or is not allowed to be updated. You may only update ' + allowedUpdates })
     }
     try {
-        const user = await User.findByIdAndUpdate(_id, body, { new: true, runValidators: true })
+        const user = await User.findById(_id)
+
         if (!user) {
             return res.status(404).send({ error: 'Could not find a user with ID: ' + _id })
         }
+
+        requestedUpdate.forEach((update) => user[update] = body[update])
+        
+        await user.save()
+        
         res.status(200).send(user)
     } catch (error) {
         res.status(500).send(error.message)

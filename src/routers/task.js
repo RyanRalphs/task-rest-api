@@ -7,7 +7,7 @@ router.post('/tasks', async ({ body }, res) => {
 
     try {
         await task.save()
-        res.status(201).send({success:'New Task saved with name ' + task.name})
+        res.status(201).send({ success: 'New Task saved with name ' + task.name })
     } catch (error) {
         res.status(400).send(error.message)
     }
@@ -51,10 +51,15 @@ router.patch('/tasks/:id', async ({ params, body }, res) => {
         return res.status(400).send({ error: 'Attempt to update on field that does not exist or is not updatable. You may only update ' + allowedFields })
     }
     try {
-        const task = await Task.findByIdAndUpdate(_id, body, { new: true, runValidators: true })
+        const task = await Task.findById(_id)
+
         if (!task) {
             return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
         }
+
+        requestedUpdate.forEach((update) => task[update] = body[update])
+        await task.save()
+
         res.status(200).send(task)
     } catch (error) {
         res.status(500).send(error.message)
