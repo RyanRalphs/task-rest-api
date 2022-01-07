@@ -4,11 +4,26 @@ const User = require('../models/user')
 
 router.post('/users', async ({ body }, res) => {
     const user = new User(body)
+
+    const userExists = await User.findOne({email: body.email})
+
+    if(userExists) {
+        return res.status(400).send('A user with email ' + body.email + ' already exists.')
+    }
     try {
         await user.save()
         res.status(201).send({ success: 'New User saved with name ' + user.name })
     } catch (error) {
-        res.status(400).send(error)
+        res.status(400).send(error.message)
+    }
+})
+
+router.post('/users/login', async ({ body }, res) => {
+    try {
+        const user = await User.findByCredentials(body.email, body.password)
+        res.status(200).send(user)
+    } catch (error) {
+        res.status(400).send(error.message)
     }
 })
 
@@ -56,9 +71,9 @@ router.patch('/users/:id', async ({ params, body }, res) => {
         }
 
         requestedUpdate.forEach((update) => user[update] = body[update])
-        
+
         await user.save()
-        
+
         res.status(200).send(user)
     } catch (error) {
         res.status(500).send(error.message)
@@ -78,6 +93,8 @@ router.delete('/users/:id', async ({ params }, res) => {
         res.status(500).send(error.message)
     }
 })
+
+
 
 
 
