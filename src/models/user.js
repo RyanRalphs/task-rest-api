@@ -2,6 +2,8 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const validator = require('validator')
+const jwt = require('jsonwebtoken')
+
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -40,22 +42,39 @@ const userSchema = new mongoose.Schema({
                 throw new Error('Password must be greater than 6 characters and not contain the word "password"')
             }
         }
-    }
+    },
+    tokens: [{
+        token: {
+            type: String,
+            required: true
+        }
+    }]
 })
 
 userSchema.statics.findByCredentials = async (email, password) => {
-        const user = await User.findOne({email})
-        if(!user) {
-            throw new Error('Cannot find user with email of ' + email)
-        }
+    const user = await User.findOne({ email })
+    if (!user) {
+        throw new Error('Cannot find user with email of ' + email)
+    }
 
-        const matchPasswords = await bcrypt.compare(password, user.password)
-        if(!matchPasswords) {
-            throw new Error('Incorrect credentials - Please try again')
-        }
+    const matchPasswords = await bcrypt.compare(password, user.password)
+    if (!matchPasswords) {
+        throw new Error('Incorrect credentials - Please try again')
+    }
 
-        return user 
+    return user
 }
+
+userSchema.methods.generateJsonWebToken = async function () {
+    const user = this
+
+    const token = jwt.sign({ _id: user._id.toString() }, 'atestingsecret')
+    
+    user.tokens = user.tokens.concat({token})
+
+    await user.save()
+}
+
 
 // Hashing a plain text password pre-save
 userSchema.pre('save', async function (next) {
