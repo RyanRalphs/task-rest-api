@@ -30,27 +30,35 @@ router.post('/users/login', async ({ body }, res) => {
     }
 })
 
+router.post('/users/logout', auth, async ({user, token}, res) => {
+    try {
+        user.tokens = user.tokens.filter((authToken) => {
+            return authToken.token !== token
+        })
+        await user.save()
+        res.status(200).send('Logged out of ' + user.email)
+    } catch (error) {
+        console.log(error)
+        res.status(404).send(error)
+    }
+})
+
+router.post('/users/logoutAllSessions', auth, async ({user}, res) => {
+    try {
+        user.tokens = []
+        await user.save()
+        res.status(200).send('Logged out of all of ' + user.email + ' sessions')
+    } catch (error) {
+        res.status(404).send(error)
+    }
+})
+
 router.get('/users/me', auth, async (req, res) => {
     res.status(200).send(req.user)
 })
 
 
-router.get('/users/:id', async ({ params }, res) => {
-    const _id = params.id
-
-    try {
-        const user = await User.findById(_id)
-        if (!user) {
-            return res.status(400).send({ error: 'Could not find a user with ID: ' + _id })
-        }
-        res.status(200).send(user)
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-})
-
-router.patch('/users/:id', async ({ params, body }, res) => {
-    const _id = params.id
+router.patch('/users/update', auth, async ({ user, body }, res) => {
     const allowedUpdates = ['name', 'email', 'age', 'password']
     const requestedUpdate = Object.keys(body)
     const isValidUpdate = requestedUpdate.every((update) => {
@@ -61,12 +69,6 @@ router.patch('/users/:id', async ({ params, body }, res) => {
         return res.status(400).send({ error: 'You are attempting to update a field that does not exist, or is not allowed to be updated. You may only update ' + allowedUpdates })
     }
     try {
-        const user = await User.findById(_id)
-
-        if (!user) {
-            return res.status(404).send({ error: 'Could not find a user with ID: ' + _id })
-        }
-
         requestedUpdate.forEach((update) => user[update] = body[update])
 
         await user.save()
@@ -77,15 +79,10 @@ router.patch('/users/:id', async ({ params, body }, res) => {
     }
 })
 
-router.delete('/users/:id', async ({ params }, res) => {
-    const _id = params.id
-
+router.delete('/users/me', auth, async ({ user }, res) => {
     try {
-        const user = await User.findByIdAndDelete(_id)
-        if (!user) {
-            return res.status(404).send({ error: 'Could not find a user with ID: ' + _id })
-        }
-        res.status(200).send(user)
+        await user.remove()
+        res.status(200).send('Deleted ' + user.email)
     } catch (error) {
         res.status(500).send(error.message)
     }
