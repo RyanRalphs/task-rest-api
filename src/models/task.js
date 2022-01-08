@@ -12,6 +12,9 @@ const Task = mongoose.model('Task', {
     completed: {
         type: Boolean,
         default: false
+    },
+    user_id: {
+        type: String,
     }
 })
 

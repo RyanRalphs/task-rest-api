@@ -1,11 +1,14 @@
 const express = require('express')
 const router = new express.Router()
 const Task = require('../models/task')
+const auth = require('../middleware/auth')
 
-router.post('/tasks', async ({ body }, res) => {
+router.post('/tasks', auth, async ({ user, body }, res) => {
     const task = new Task(body)
 
+
     try {
+        task.user_id = user._id
         await task.save()
         res.status(201).send({ success: 'New Task saved with name ' + task.name })
     } catch (error) {
@@ -14,9 +17,9 @@ router.post('/tasks', async ({ body }, res) => {
 })
 
 
-router.get('/tasks', async (req, res) => {
+router.get('/tasks', auth, async ({ user }, res) => {
     try {
-        const tasks = await Task.find({})
+        const tasks = await Task.find({ user_id: user._id })
         res.status(200).send(tasks)
     } catch (error) {
         res.status(500).send()
@@ -25,13 +28,14 @@ router.get('/tasks', async (req, res) => {
 })
 
 
-router.get('/tasks/:id', async ({ params }, res) => {
+router.get('/tasks/:id', auth, async ({ params, user }, res) => {
     const _id = params.id
 
     try {
         const task = await Task.findById(_id)
-        if (!task) {
-            return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
+
+        if (!task || task.user_id !== user.toJSON()._id) {
+            return res.status(404).send({ error: 'Could not find your task with ID: ' + _id })
         }
         res.status(200).send(task)
     } catch (error) {
@@ -39,7 +43,7 @@ router.get('/tasks/:id', async ({ params }, res) => {
     }
 })
 
-router.patch('/tasks/:id', async ({ params, body }, res) => {
+router.patch('/tasks/:id', auth, async ({ params, body, user }, res) => {
     const _id = params.id
     const allowedFields = ['name', 'description', 'completed']
     const requestedUpdate = Object.keys(body)
@@ -53,7 +57,7 @@ router.patch('/tasks/:id', async ({ params, body }, res) => {
     try {
         const task = await Task.findById(_id)
 
-        if (!task) {
+        if (!task || task.user_id !== user.toJSON()._id) {
             return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
         }
 
@@ -66,14 +70,15 @@ router.patch('/tasks/:id', async ({ params, body }, res) => {
     }
 })
 
-router.delete('/tasks/:id', async ({ params }, res) => {
+router.delete('/tasks/:id', auth, async ({ params, user }, res) => {
     const _id = params.id
 
     try {
-        const task = await Task.findByIdAndDelete(_id)
-        if (!task) {
+        const task = await Task.findById(_id)
+        if (!task || task.user_id !== user.toJSON()._id) {
             return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
         }
+        await task.delete()
         res.status(200).send(task)
     } catch (error) {
         res.status(500).send(error.message)

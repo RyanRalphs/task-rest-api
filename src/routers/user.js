@@ -58,7 +58,7 @@ router.get('/users/me', auth, async (req, res) => {
 })
 
 
-router.patch('/users/update', auth, async ({ user, body }, res) => {
+router.patch('/users/me', auth, async ({ user, body }, res) => {
     const allowedUpdates = ['name', 'email', 'age', 'password']
     const requestedUpdate = Object.keys(body)
     const isValidUpdate = requestedUpdate.every((update) => {
