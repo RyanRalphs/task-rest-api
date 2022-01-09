@@ -11,7 +11,7 @@ const upload = multer({
     },
     fileFilter(req, file, cb) {
         if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
-            return cb(new Error('File must be an image type'))
+            return cb(new Error('File must be an image type'), undefined)
         }
         cb(undefined, true)
     }
@@ -122,9 +122,9 @@ router.delete('/users/me/avatar', auth, async ({ user }, res) => {
 })
 
 
-router.get('/users/:id/avatar', async (req, res) => {
+router.get('/users/:id/avatar', async ({ params }, res) => {
     try {
-        const user = await User.findById(req.params.id)
+        const user = await User.findById(params.id)
 
         if (!user || !user.avatar) {
             throw new Error('Problem fetching image for that user.')
