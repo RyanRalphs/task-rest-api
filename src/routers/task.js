@@ -4,11 +4,11 @@ const Task = require('../models/task')
 const auth = require('../middleware/auth')
 
 router.post('/tasks', auth, async ({ user, body }, res) => {
-    const task = new Task(body)
-
-
+    const task = new Task({
+        ...body,
+        owner: user._id
+    })
     try {
-        task.user_id = user._id
         await task.save()
         res.status(201).send({ success: 'New Task saved with name ' + task.name })
     } catch (error) {
@@ -19,7 +19,7 @@ router.post('/tasks', auth, async ({ user, body }, res) => {
 
 router.get('/tasks', auth, async ({ user }, res) => {
     try {
-        const tasks = await Task.find({ user_id: user._id })
+        const tasks = await Task.find({owner: user._id})
         res.status(200).send(tasks)
     } catch (error) {
         res.status(500).send()
@@ -31,10 +31,11 @@ router.get('/tasks', auth, async ({ user }, res) => {
 router.get('/tasks/:id', auth, async ({ params, user }, res) => {
     const _id = params.id
 
-    try {
-        const task = await Task.findById(_id)
 
-        if (!task || task.user_id !== user.toJSON()._id) {
+
+    try {
+        const task = await Task.findOne({_id, owner: user._id})
+        if (!task) {
             return res.status(404).send({ error: 'Could not find your task with ID: ' + _id })
         }
         res.status(200).send(task)
@@ -55,9 +56,9 @@ router.patch('/tasks/:id', auth, async ({ params, body, user }, res) => {
         return res.status(400).send({ error: 'Attempt to update on field that does not exist or is not updatable. You may only update ' + allowedFields })
     }
     try {
-        const task = await Task.findById(_id)
+        const task = await Task.findOne({_id, owner: user._id})
 
-        if (!task || task.user_id !== user.toJSON()._id) {
+        if (!task) {
             return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
         }
 
@@ -74,11 +75,10 @@ router.delete('/tasks/:id', auth, async ({ params, user }, res) => {
     const _id = params.id
 
     try {
-        const task = await Task.findById(_id)
-        if (!task || task.user_id !== user.toJSON()._id) {
+        const task = await Task.findOneAndDelete({_id, owner: user._id})
+        if (!task) {
             return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
         }
-        await task.delete()
         res.status(200).send(task)
     } catch (error) {
         res.status(500).send(error.message)
