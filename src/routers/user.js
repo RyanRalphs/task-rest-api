@@ -2,35 +2,40 @@ const express = require('express')
 const router = new express.Router()
 const User = require('../models/user')
 const auth = require('../middleware/auth')
+const multer = require('multer')
+
+const upload = multer({
+    dest: 'user/avatars'
+})
 
 router.post('/users', async ({ body }, res) => {
     const user = new User(body)
 
-    const userExists = await User.findOne({email: body.email})
+    const userExists = await User.findOne({ email: body.email })
 
-    if(userExists) {
+    if (userExists) {
         return res.status(400).send('A user with email ' + body.email + ' already exists.')
     }
     try {
         await user.save()
         const token = await user.generateJsonWebToken()
-        res.status(201).send({user, token})
+        res.status(201).send({ user, token })
     } catch (error) {
         res.status(400).send(error.message)
     }
 })
 
-router.post('/users/login', async ({ body }, res) => {
+router.post('/users/login', async ({ body }, res) => { 
     try {
         const user = await User.findByCredentials(body.email, body.password)
-        const token = await user.generateJsonWebToken()
-        res.status(200).send({user, token})
+        const token = await user.generateJsonWebToken() 
+        res.status(200).send({ user, token })
     } catch (error) {
         res.status(400).send(error.message)
     }
 })
 
-router.post('/users/logout', auth, async ({user, token}, res) => {
+router.post('/users/logout', auth, async ({ user, token }, res) => {
     try {
         user.tokens = user.tokens.filter((authToken) => {
             return authToken.token !== token
@@ -43,7 +48,7 @@ router.post('/users/logout', auth, async ({user, token}, res) => {
     }
 })
 
-router.post('/users/logoutAllSessions', auth, async ({user}, res) => {
+router.post('/users/logoutAllSessions', auth, async ({ user }, res) => {
     try {
         user.tokens = []
         await user.save()
@@ -89,6 +94,10 @@ router.delete('/users/me', auth, async ({ user }, res) => {
     }
 })
 
+
+router.post('/users/me/avatar', auth, upload.single('avatar'), ({ file }, res) => {
+        res.send('File ' + file.originalname + ' has been successfully uploaded')
+})
 
 
 
