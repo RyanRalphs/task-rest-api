@@ -81,12 +81,14 @@ router.patch('/users/me', auth, async ({ user, body }, res) => {
 
 router.delete('/users/me', auth, async ({ user }, res) => {
     try {
+        await user.populate('tasks')
         await user.remove()
         res.status(200).send('Deleted ' + user.email)
     } catch (error) {
         res.status(500).send(error.message)
     }
 })
+
 
 
 
