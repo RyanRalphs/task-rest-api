@@ -19,8 +19,8 @@ router.post('/tasks', auth, async ({ user, body }, res) => {
 
 router.get('/tasks', auth, async ({ user }, res) => {
     try {
-        const tasks = await Task.find({owner: user._id})
-        res.status(200).send(tasks)
+        await user.populate('tasks')
+        res.status(200).send(user.tasks)
     } catch (error) {
         res.status(500).send()
     }
@@ -34,7 +34,7 @@ router.get('/tasks/:id', auth, async ({ params, user }, res) => {
 
 
     try {
-        const task = await Task.findOne({_id, owner: user._id})
+        const task = await Task.findOne({ _id, owner: user._id })
         if (!task) {
             return res.status(404).send({ error: 'Could not find your task with ID: ' + _id })
         }
@@ -56,7 +56,7 @@ router.patch('/tasks/:id', auth, async ({ params, body, user }, res) => {
         return res.status(400).send({ error: 'Attempt to update on field that does not exist or is not updatable. You may only update ' + allowedFields })
     }
     try {
-        const task = await Task.findOne({_id, owner: user._id})
+        const task = await Task.findOne({ _id, owner: user._id })
 
         if (!task) {
             return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
@@ -75,7 +75,7 @@ router.delete('/tasks/:id', auth, async ({ params, user }, res) => {
     const _id = params.id
 
     try {
-        const task = await Task.findOneAndDelete({_id, owner: user._id})
+        const task = await Task.findOneAndDelete({ _id, owner: user._id })
         if (!task) {
             return res.status(404).send({ error: 'Could not find a task with ID: ' + _id })
         }
