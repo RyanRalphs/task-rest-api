@@ -1,4 +1,6 @@
 .env
 node_modules
 playground
-user
+tests/config
+tests/math.test.js
+coverage
