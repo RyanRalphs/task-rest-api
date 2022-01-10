@@ -1,3 +1,5 @@
 const mongoose = require('mongoose')
+require('dotenv').config()  
+const database = process.env.MONGO_DB_CONNECTION
 
-mongoose.connect('mongodb://127.0.0.1:27017/task_manager_api')
+mongoose.connect(database)
