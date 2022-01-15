@@ -1,6 +1,6 @@
 const express = require('express')
 const router = new express.Router()
-const User = require('../models/user') 
+const User = require('../models/user')
 const auth = require('../middleware/auth')
 const multer = require('multer')
 const sharp = require('sharp')
@@ -70,6 +70,7 @@ router.post('/users/logoutAllSessions', auth, async ({ user }, res) => {
 
 router.get('/users/me', auth, async (req, res) => {
     res.status(200).send(req.user)
+
 })
 
 
@@ -90,21 +91,19 @@ router.patch('/users/me', auth, async ({ user, body }, res) => {
 
         res.status(200).send(user)
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(400).send(error.message)
     }
 })
 
-router.delete('/users/me', auth, async ({ user }, res) => {
+router.delete('/users/me', auth, async (req, res) => {
     try {
-        await user.populate('tasks')
-        await user.remove()
-        sendCancellationEmail(user.name, user.email)
-        res.status(200).send('Deleted ' + user.email)
-    } catch (error) {
-        res.status(500).send(error.message)
+        await req.user.remove()
+        sendCancellationEmail(req.user.email, req.user.name)
+        res.send(req.user)
+    } catch (e) {
+        res.status(500).send()
     }
 })
-
 
 router.post('/users/me/avatar', auth, upload.single('avatar'), async ({ file, user }, res) => {
     const buffer = await sharp(file.buffer).resize({ width: 320, height: 400 }).png().toBuffer()
