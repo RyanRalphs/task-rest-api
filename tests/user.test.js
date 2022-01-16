@@ -1,29 +1,12 @@
 const request = require('supertest')
-const jwt = require('jsonwebtoken')
-const mongoose = require('mongoose')
 const app = require('../src/app')
 const User = require('../src/models/user')
-const fs = require('fs')
+const { testUserId, testUser, populateDatabase } = require('./fixtures/db/db')
 
-const testUserId = new mongoose.Types.ObjectId()
 
-const testUser = new User({
-  _id: testUserId,
-  name: 'Testing',
-  email: 'node@ryanralphs.co.uk',
-  password: 'secretsaresecret123',
-  tokens: [{
-    token: jwt.sign({ _id: testUserId }, process.env.JWT_SECRET)
-  }]
-})
-
-beforeEach(async () => {
-  await User.deleteMany()
-  await new User(testUser).save()
-})
+beforeEach(populateDatabase)
 
 test('Should sign up a new user', async () => {
-
   const newUser = {
     name: 'Ryan',
     email: 'dev@ryanralphs.co.uk',
@@ -130,4 +113,40 @@ test('I can not delete what is not logged in', async () => {
     .delete('/users/me')
     .send()
     .expect(401)
+})
+
+
+test('Should upload an avatar for a user', async () => {
+  await request(app)
+    .post('/users/me/avatar')
+    .set('Authorization', `Bearer ${testUser.tokens[0].token}`)
+    .attach('avatar', 'tests/fixtures/MeAndHarv.jpeg')
+    .expect(200)
+
+  const user = await User.findById(testUser._id)
+
+  expect(user.avatar).toEqual(expect.any(Buffer))
+})
+
+test('Should update valid user fields', async () => {
+  await request(app)
+    .patch('/users/me')
+    .set('Authorization', `Bearer ${testUser.tokens[0].token}`)
+    .send({
+      name: 'Updated Name',
+      age: 4
+    }).expect(200)
+
+  const user = await User.findById(testUser._id)
+
+  expect(user.name).toBe('Updated Name')
+})
+
+test('Should not update user with invalid fields', async () => {
+  await request(app)
+    .patch('/users/me')
+    .set('Authorization', `Bearer ${testUser.tokens[0].token}`)
+    .send({
+      lastName: 'Updated Name'
+    }).expect(400)
 })

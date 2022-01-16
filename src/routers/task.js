@@ -10,7 +10,7 @@ router.post('/tasks', auth, async ({ user, body }, res) => {
     })
     try {
         await task.save()
-        res.status(201).send({ success: 'New Task saved with name ' + task.name })
+        res.status(201).send({_id: task._id})
     } catch (error) {
         res.status(400).send(error.message)
     }
